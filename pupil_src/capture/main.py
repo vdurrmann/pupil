@@ -132,6 +132,9 @@ def main():
 
     # Spawn subprocess:
     p_eye0.start()
+    if platform.system() == 'Linux':
+        # We need to give the camera driver some time before requesting another camera.
+        sleep(0.5)
     p_eye1.start()
     if platform.system() == 'Linux':
         # We need to give the camera driver some time before requesting another camera.
