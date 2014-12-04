@@ -202,7 +202,7 @@ def eye(g_pool,cap_src,cap_size):
     # refresh speed settings
     glfwSwapInterval(0)
 
-
+    render_skip = 0
     # event loop
     while not g_pool.quit.value:
         # Get an image from the grabber
@@ -246,39 +246,42 @@ def eye(g_pool,cap_src,cap_size):
         # stream the result
         g_pool.pupil_queue.put(result)
 
-        # VISUALIZATION direct visualizations on the frame.img data
-        if bar.display.value == 1:
-            # and a solid (white) frame around the user defined ROI
-            r_img = frame.img[u_r.lY:u_r.uY,u_r.lX:u_r.uX]
-            r_img[:,0] = 255,255,255
-            r_img[:,-1]= 255,255,255
-            r_img[0,:] = 255,255,255
-            r_img[-1,:]= 255,255,255
+        if not render_skip:
+            render_skip = 4
+            # VISUALIZATION direct visualizations on the frame.img data
+            if bar.display.value == 1:
+                # and a solid (white) frame around the user defined ROI
+                r_img = frame.img[u_r.lY:u_r.uY,u_r.lX:u_r.uX]
+                r_img[:,0] = 255,255,255
+                r_img[:,-1]= 255,255,255
+                r_img[0,:] = 255,255,255
+                r_img[-1,:]= 255,255,255
 
 
 
-        # GL-drawing
-        clear_gl_screen()
-        make_coord_system_norm_based()
-        if bar.display.value != 3:
-            draw_named_texture(g_pool.image_tex,frame.img)
+            # GL-drawing
+            clear_gl_screen()
+            make_coord_system_norm_based()
+            if bar.display.value != 3:
+                draw_named_texture(g_pool.image_tex,frame.img)
+            else:
+                draw_named_texture(g_pool.image_tex)
+            make_coord_system_pixel_based(frame.img.shape)
+
+
+            if result['norm_pupil'] is not None and bar.draw_pupil.value:
+                if result.has_key('axes'):
+                    pts = cv2.ellipse2Poly( (int(result['center'][0]),int(result['center'][1])),
+                                            (int(result["axes"][0]/2),int(result["axes"][1]/2)),
+                                            int(result["angle"]),0,360,15)
+                    draw_gl_polyline(pts,(1.,0,0,.5))
+                draw_gl_point_norm(result['norm_pupil'],color=(1.,0.,0.,0.5))
+
+            atb.draw()
+            glfwSwapBuffers(window)
+            glfwPollEvents()
         else:
-            draw_named_texture(g_pool.image_tex)
-        make_coord_system_pixel_based(frame.img.shape)
-
-
-        if result['norm_pupil'] is not None and bar.draw_pupil.value:
-            if result.has_key('axes'):
-                pts = cv2.ellipse2Poly( (int(result['center'][0]),int(result['center'][1])),
-                                        (int(result["axes"][0]/2),int(result["axes"][1]/2)),
-                                        int(result["angle"]),0,360,15)
-                draw_gl_polyline(pts,(1.,0,0,.5))
-            draw_gl_point_norm(result['norm_pupil'],color=(1.,0.,0.,0.5))
-
-        atb.draw()
-        glfwSwapBuffers(window)
-        glfwPollEvents()
-
+            render_skip -= 1
     # END while running
 
     # in case eye reconding was still runnnig: Save&close
