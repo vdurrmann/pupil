@@ -14,7 +14,7 @@ if __name__ == '__main__':
     from os import path as ospath
     loc = ospath.abspath(__file__).rsplit('pupil_src', 1)
     syspath.append(ospath.join(loc[0], 'pupil_src', 'shared_modules'))
-    del syspath, ospath
+    del syspath, ospath 
 
 
 import os, sys
@@ -42,6 +42,8 @@ from display_recent_gaze import Display_Recent_Gaze
 from pupil_server import Pupil_Server
 from pupil_remote import Pupil_Remote
 from marker_detector import Marker_Detector
+
+from drEYEve import drEYEve
 
 # create logger for the context of this function
 logger = logging.getLogger(__name__)
@@ -338,6 +340,9 @@ def world(g_pool,cap_src,cap_size):
 
     #load gaze_display plugin
     g_pool.plugins.append(Display_Recent_Gaze(g_pool))
+    
+    #load drEYE plugin
+    g_pool.plugins.append(drEYEve(g_pool))
 
 
     # Event loop
