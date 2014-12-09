@@ -96,6 +96,7 @@ def main():
     # To assign camera by name: put string(s) in list
     eye_src = ["Microsoft", "6000","Integrated Camera"]
     world_src = ["Logitech Camera","(046d:081d)","C510","B525", "C525","C615","C920","C930e"]
+    
 
     # to assign cameras directly, using integers as demonstrated below
     # eye_src = 1
@@ -103,13 +104,13 @@ def main():
 
     # to use a pre-recorded video.
     # Use a string to specify the path to your video file as demonstrated below
-    eye_src = '/media/marius/B0A0C5F1A0C5BDDA/Users/Marius/Documents/Etudes_&_Jobs/INSA/5 Oulun Yliopisto/RTDSD/Pupil_Clone_Repo/pupil/recordings/2014_12_05/003/eye.avi'
-    world_src = "/media/marius/B0A0C5F1A0C5BDDA/Users/Marius/Documents/Etudes_&_Jobs/INSA/5 Oulun Yliopisto/RTDSD/Pupil_Clone_Repo/pupil/recordings/2014_12_05/003/world.avi"
-    #timestamps = np.load("/media/marius/B0A0C5F1A0C5BDDA/Users/Marius/Documents/Etudes_&_Jobs/INSA/5 Oulun Yliopisto/RTDSD/Pupil_Clone_Repo/pupil/recordings/2014_12_05/003/timestamps.npy")
+    #eye_src = "/home/vincent/Documents/INSA/5EII/Oulu/RTDSD/Project/src/pupil/recordings/2014_12_05/004/eye.avi"
+    #world_src = "/home/vincent/Documents/INSA/5EII/Oulu/RTDSD/Project/src/pupil/recordings/2014_12_05/004/world.avi"
 
     # Camera video size in pixels (width,height)
     eye_size = (640,360)
     world_size = (1280,720)
+
 
 
     # on MacOS we will not use os.fork, elsewhere this does nothing.

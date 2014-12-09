@@ -19,7 +19,6 @@ def on_resize(window,w, h):
 
 class drEYEve(Plugin):
 
-    
     def __init__(self,g_pool,atb_pos=(10,320)):
         Plugin.__init__(self)
 
@@ -30,29 +29,25 @@ class drEYEve(Plugin):
         self._window = None
         
         self.pupil_display_list = []
-       
-            
-        #primary_monitor = glfwGetPrimaryMonitor()
-
         
         #To get the state Value
         def get_state(data):
             return data.value
-        #To set the state Value
-        def set_state(newSate):
-            self.state=newState
-        
 
-        atb_label = "drEYEve"
+
+        #ATB variables
+        self.state_enum = atb.enum("State",{"Stop":0, "Backward":1,"Normal Speed":2,"High Speed":3})
+        self.state = c_int(0)
+
         # Creating an ATB Bar.
+        atb_label = "drEYEve"
         self._bar = atb.Bar(name =self.__class__.__name__, label=atb_label,
             help="state of drEYEve project", color=(50, 50, 50), alpha=100,
             text='light', position=atb_pos,refresh=.3, size=(300, 100))
         
-        self.state_enum = atb.enum("State",{"Stop":0, "Backward":1,"Normal Speed":2,"High Speed":3})
-        self.state = c_int(0)
+        self.state_data = c_int(0)
         
-        self._bar.add_var("Current state", vtype=self.state_enum,setter=set_state,getter=get_state, readonly=True)
+        self._bar.add_var("Current state", vtype=self.state_enum, getter=get_state, data=self.state_data, readonly=True)
         self._bar.add_var("State", self.state, readonly=True)
 
     def do_open(self):
@@ -108,16 +103,18 @@ class drEYEve(Plugin):
             if pt['norm_gaze'] is not None:
                 if pt['norm_gaze'][0] < 0.40:
                     self.state.value = 1
-                    print "Inferieur"
+                    self.state_data.value = 1
+                    
+                    #print "Inferieur"
                 if pt['norm_gaze'][0] > 0.40:
-                    self.state.value = 0  
-                    print "superieur"  
+                    self.state.value = 0
+                    self.state_data.value = 0  
+                    #print "superieur"  
                 
                 self.pupil_display_list.append(pt['norm_gaze'])
         self.pupil_display_list[:-3] = []
 
-        
-        
+
         if self.window_should_close:
             self.close_window()
 
