@@ -4,7 +4,7 @@ from glfw import *
 from plugin import Plugin
 from gl_utils import draw_gl_points_norm
 
-from ctypes import c_int,c_bool
+from ctypes import c_float
 import atb
 from gl_utils import adjust_gl_view,clear_gl_screen,basic_gl_setup
 
@@ -18,6 +18,14 @@ def on_resize(window,w, h):
     
 
 class drEYEve(Plugin):
+    
+    STOP = 0
+    BACKWARD = 1
+    NORMAL_SPEED = 2
+    HIGH_SPEED = 3
+    LEFT = 4
+    RIGHT = 5
+    
 
     def __init__(self,g_pool,atb_pos=(10,320)):
         Plugin.__init__(self)
@@ -36,8 +44,9 @@ class drEYEve(Plugin):
 
 
         #ATB variables
-        self.state_enum = atb.enum("State",{"Stop":0, "Backward":1,"Normal Speed":2,"High Speed":3})
-        self.state = c_int(0)
+        self.state_enum = atb.enum("State",{"Stop":self.STOP, "Backward":self.BACKWARD,"Normal Speed":self.NORMAL_SPEED,"High Speed":self.HIGH_SPEED,"Left":self.LEFT,"Right":self.RIGHT})
+        self.gaze_x = c_float(0.0)
+        self.gaze_y = c_float(0.0)
 
         # Creating an ATB Bar.
         atb_label = "drEYEve"
@@ -48,7 +57,8 @@ class drEYEve(Plugin):
         self.state_data = c_int(0)
         
         self._bar.add_var("Current state", vtype=self.state_enum, getter=get_state, data=self.state_data, readonly=True)
-        self._bar.add_var("State", self.state, readonly=True)
+        self._bar.add_var("Gaze X", self.gaze_x, readonly=True)
+        self._bar.add_var("Gaze Y", self.gaze_y, readonly=True)
 
     def do_open(self):
         if not self._window:
@@ -101,17 +111,23 @@ class drEYEve(Plugin):
         
         for pt in recent_pupil_positions:
             if pt['norm_gaze'] is not None:
+                
+                self.gaze_x.value = pt['norm_gaze'][0]
+                self.gaze_y.value = pt['norm_gaze'][1]
+                
                 if pt['norm_gaze'][0] < 0.40:
-                    self.state.value = 1
-                    self.state_data.value = 1
+                    self.state_data.value = self.LEFT
                     
                     #print "Inferieur"
                 if pt['norm_gaze'][0] > 0.40:
-                    self.state.value = 0
-                    self.state_data.value = 0  
+                    self.state_data.value = self.RIGHT  
                     #print "superieur"  
                 
                 self.pupil_display_list.append(pt['norm_gaze'])
+            #else:#if eye closed
+                #print "Que dalle"
+                #print self.gaze_x.value
+                
         self.pupil_display_list[:-3] = []
 
 
@@ -126,10 +142,10 @@ class drEYEve(Plugin):
         """
         use gl calls to render on world window
         """
-        if self.state == 0:
-            draw_gl_points_norm(self.pupil_display_list,size=35,color=(1.,.5,.5,.6))
-        if self.state == 1:
-            draw_gl_points_norm(self.pupil_display_list,size=35,color=(.5,1.,.5,.6))
+        if self.gaze_x == 0:
+            draw_gl_points_norm(self.pupil_display_list,size=60,color=(1.,.5,.5,.6))
+        if self.gaze_x == 1:
+            draw_gl_points_norm(self.pupil_display_list,size=60,color=(.5,1.,.5,.6))
 
         # gl stuff that will show on the world window goes here:
 
