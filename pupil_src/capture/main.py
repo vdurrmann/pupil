@@ -9,6 +9,7 @@
 '''
 
 import sys, os,platform
+import numpy as np
 from time import sleep
 from ctypes import c_bool, c_int,c_double
 if platform.system() == 'Darwin':
@@ -102,8 +103,9 @@ def main():
 
     # to use a pre-recorded video.
     # Use a string to specify the path to your video file as demonstrated below
-    # eye_src = '/Users/mkassner/Pupil/datasets/p1-left/frames/test.avi'
-    # world_src = "/Users/mkassner/Desktop/2014_01_21/000/world.avi"
+    eye_src = '/media/marius/B0A0C5F1A0C5BDDA/Users/Marius/Documents/Etudes_&_Jobs/INSA/5 Oulun Yliopisto/RTDSD/Pupil_Clone_Repo/pupil/recordings/2014_12_05/003/eye.avi'
+    world_src = "/media/marius/B0A0C5F1A0C5BDDA/Users/Marius/Documents/Etudes_&_Jobs/INSA/5 Oulun Yliopisto/RTDSD/Pupil_Clone_Repo/pupil/recordings/2014_12_05/003/world.avi"
+    #timestamps = np.load("/media/marius/B0A0C5F1A0C5BDDA/Users/Marius/Documents/Etudes_&_Jobs/INSA/5 Oulun Yliopisto/RTDSD/Pupil_Clone_Repo/pupil/recordings/2014_12_05/003/timestamps.npy")
 
     # Camera video size in pixels (width,height)
     eye_size = (640,360)
