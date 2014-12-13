@@ -8,7 +8,6 @@ from ctypes import c_float
 import atb
 from gl_utils import adjust_gl_view,clear_gl_screen,basic_gl_setup
 
-
 # window calbacks
 def on_resize(window,w, h):
     active_window = glfwGetCurrentContext()
@@ -25,7 +24,13 @@ class drEYEve(Plugin):
     HIGH_SPEED = 3
     LEFT = 4
     RIGHT = 5
-    
+    #the border of the different area within the frame
+    LEFT_BORDER = 0.35
+    RIGHT_BORDER = 0.65
+    UP_BORDER = 0.65
+    DOWN_BORDER = 0.05
+    #Threshold frames
+    FRAME_WAIT = 12
 
     def __init__(self,g_pool,atb_pos=(10,320)):
         Plugin.__init__(self)
@@ -37,6 +42,7 @@ class drEYEve(Plugin):
         self._window = None
         
         self.pupil_display_list = []
+        self.nb_frame = 0
         
         #To get the state Value
         def get_state(data):
@@ -111,22 +117,66 @@ class drEYEve(Plugin):
         
         for pt in recent_pupil_positions:
             if pt['norm_gaze'] is not None:
+                self.nb_frame = self.nb_frame + 1
+                if self.nb_frame > self.FRAME_WAIT: 
+                    
+                    #self.LEFT
+                    if (pt['norm_gaze'][0] < self.LEFT_BORDER) and (self.state_data.value!=self.BACKWARD):
+                        self.previous_state = self.state_data.value
+                        self.state_data.value = self.LEFT
+                        self.nb_frame = 0
+                    elif (self.state_data.value == self.LEFT) and (pt['norm_gaze'][0] > self.LEFT_BORDER):
+                        if self.previous_state == self.STOP:
+                            self.state_data.value = self.STOP
+                            self.nb_frame = 0
+                        else:
+                            self.state_data.value = self.NORMAL_SPEED
+                            self.nb_frame = 0
+                    #self.RIGHT
+                    elif (pt['norm_gaze'][0] > self.RIGHT_BORDER) and (self.state_data.value!=self.BACKWARD):
+                        self.previous_state = self.state_data.value
+                        self.state_data.value = self.RIGHT
+                        self.nb_frame = 0
+                    elif (self.state_data.value == self.RIGHT) and (pt['norm_gaze'][0] < self.RIGHT_BORDER):
+                        if self.previous_state == self.STOP:
+                            self.state_data.value = self.STOP
+                            self.nb_frame = 0
+                        else:
+                            self.state_data.value = self.NORMAL_SPEED
+                            self.nb_frame = 0
+                    #NORMAL SPEED
+                    elif (pt['norm_gaze'][1]>self.UP_BORDER) and (self.state_data.value==self.STOP):
+                        self.state_data.value = self.NORMAL_SPEED
+                        self.nb_frame = 0
+                    elif (pt['norm_gaze'][1]<self.DOWN_BORDER) and (self.state_data.value==self.HIGH_SPEED):
+                        self.state_data.value = self.NORMAL_SPEED
+                        self.nb_frame = 0
+                    
+                    #HIGH SPEED
+                    elif (pt['norm_gaze'][1]>self.UP_BORDER) and (self.state_data.value==self.NORMAL_SPEED):
+                        self.state_data.value = self.HIGH_SPEED
+                        self.nb_frame = 0
+                    #self.BACKWARD
+                    elif (pt['norm_gaze'][1]<self.DOWN_BORDER) and (self.state_data.value==self.STOP):
+                        self.state_data.value = self.BACKWARD
+                        self.nb_frame = 0
+                    
+                    #self.STOP
+                    elif (pt['norm_gaze'][1]>self.UP_BORDER) and (self.state_data.value==self.BACKWARD):
+                        self.state_data.value = self.STOP
+                        self.nb_frame = 0
+                    elif (pt['norm_gaze'][1]<self.DOWN_BORDER) and (self.state_data.value==self.NORMAL_SPEED):
+                        self.state_data.value = self.STOP
+                        self.nb_frame = 0
+                    
+                #END if nb_frame > FRAME_WAIT    
                 
                 self.gaze_x.value = pt['norm_gaze'][0]
                 self.gaze_y.value = pt['norm_gaze'][1]
-                
-                if pt['norm_gaze'][0] < 0.40:
-                    self.state_data.value = self.LEFT
-                    
-                    #print "Inferieur"
-                if pt['norm_gaze'][0] > 0.40:
-                    self.state_data.value = self.RIGHT  
-                    #print "superieur"  
+                   
                 
                 self.pupil_display_list.append(pt['norm_gaze'])
-            #else:#if eye closed
-                #print "Que dalle"
-                #print self.gaze_x.value
+            #END if pt
                 
         self.pupil_display_list[:-3] = []
 
