@@ -7,6 +7,7 @@ from gl_utils import draw_gl_points_norm
 from ctypes import c_float
 import atb
 from gl_utils import adjust_gl_view,clear_gl_screen,basic_gl_setup
+from timeit import time
 
 # window calbacks
 def on_resize(window,w, h):
@@ -29,10 +30,11 @@ class drEYEve(Plugin):
     RIGHT_BORDER = 0.65
     UP_BORDER = 0.65
     DOWN_BORDER = 0.05
-    #Threshold frames
+    #Threshold in number of frame
     STATE_WAIT = 12 #minimum number of frame between 2 state changements
-    FORGET_BLINK = 30 #define when previous blinks have to be forgotten
-    BLINK = 25 #number of frame where the eye has to be closed to consider a vonlunteer blink
+    #Threshold in seconds
+    FORGET_BLINK = 1.0 #define when previous blinks have to be forgotten
+    BLINK = 0.35 #number of frame where the eye has to be closed to consider a vonlunteer blink
     #Control mode
     OFF = 0
     ON = 1
@@ -49,9 +51,10 @@ class drEYEve(Plugin):
         
         self.pupil_display_list = []
         self.nb_frame = 0 #to include a little delay between 2 changement of state
-        self.nb_opened = 0 #number of frame where the eye is opened
-        self.nb_closed = 0 #number of frame where the eye is closed
         self.nb_blink = 0 #number of consecutive blink
+        self.time_eye_c = 0 #time when the eye is closed
+        self.time_eye_o = 0 #time when the eye is opened
+        self.eye_open = False #1 if the eye is opened, else 0
         
         #To get the state Value
         def get_state(data):
@@ -132,14 +135,17 @@ class drEYEve(Plugin):
             #if the eye is detected
             if pt['norm_gaze'] is not None:
                 self.nb_frame += 1
-                self.nb_opened += 1
+                #if the eye was closed
+                if(self.eye_open == False):
+                    self.time_eye_o = time.time()
+                self.eye_open = True
                 
                 #BLINK CONTROL
                 #if the eye is opened too long, previous blinks are forgotten
-                if(self.nb_opened > self.FORGET_BLINK):
+                if(time.time() - self.time_eye_o) > self.FORGET_BLINK:
                     self.nb_blink = 0
                 #if the previous closed session was long, nb_blink is incremented
-                if(self.nb_closed > self.BLINK):
+                if(time.time() - self.time_eye_c) > self.BLINK:
                     self.nb_blink += 1
                     print "Nb blink :"
                     print self.nb_blink
@@ -153,7 +159,7 @@ class drEYEve(Plugin):
                     print "Mode control"
                     print self.control_mode.value
                 
-                self.nb_closed = 0
+                self.time_eye_c = time.time()
                     
                 #STATE CONTROL
                 if (self.nb_frame > self.STATE_WAIT and self.control_mode.value == self.ON): 
@@ -215,10 +221,14 @@ class drEYEve(Plugin):
                 self.pupil_display_list.append(pt['norm_gaze'])
             #if the eye is not detected
             else:
-                self.nb_opened = 0
-                self.nb_closed += 1
+                #if the eye was open
+                if self.eye_open == True:
+                    self.time_eye_c = time.time()
+                
+                self.eye_open = False
+                self.time_eye_o = time.time()
                 #if the eye is closed too long, we stop
-                if self.nb_closed > self.BLINK:
+                if (time.time() - self.time_eye_c) > self.BLINK:
                     self.state.value = self.STOP
                     print "Volunteer blink"
                 
